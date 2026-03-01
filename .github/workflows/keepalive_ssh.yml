@@ -1,0 +1,29 @@
+name: Serv00 Keep Alive (SSH Key, Stable)
+
+on:
+  schedule:
+    - cron: '0 3 */5 * *'  # 每5天 UTC 3点执行一次
+  workflow_dispatch:      # 手动触发
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ 写入 SSH 私钥
+      - name: Setup SSH Key
+        env:
+          SSH_KEY: ${{ secrets.SERV00_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+      # 2️⃣ SSH 登录 Serv00
+      - name: Keep Serv00 Alive
+        env:
+          HOST: ${{ secrets.SERV00_HOST }}
+          USERNAME: ${{ secrets.SERV00_USER }}
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+          "$USERNAME@$HOST" "echo KeepAlive Success"
